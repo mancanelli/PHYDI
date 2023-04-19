@@ -1,0 +1,14 @@
+--task=1
+--max_tokens=28781
+--n=4
+--emb_size=128
+--nhead=8
+--nhid=256
+--ln_vers=None
+--rezero=False
+--epochs=50
+--num_encoder_layers=48
+--lr=0.01
+--batch_size=64
+--eval_batch_size=64
+--seed=985325
