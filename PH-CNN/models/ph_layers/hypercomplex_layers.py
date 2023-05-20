@@ -131,6 +131,142 @@ class PHConv(Module):
     bound = 1 / math.sqrt(fan_in)
     init.uniform_(self.bias, -bound, bound)
 
+#############################
+##### Weighted PH LAYER #####
+#############################
+
+class WPHMLinear(nn.Module):
+  def __init__(self, n, in_features, out_features, kron_weights=1, kron_res=False, cuda=True):
+    super(WPHMLinear, self).__init__()
+    self.n = n
+    self.in_features = in_features
+    self.out_features = out_features
+    self.cuda = cuda
+
+    if kron_weights == 1:
+      self.kron_weights = nn.Parameter(torch.ones(n), requires_grad = True)
+    elif kron_weights == 0:
+      self.kron_weights = nn.Parameter(torch.zeros(n), requires_grad = True)
+    self.kron_res = kron_res
+
+    self.bias = nn.Parameter(torch.Tensor(out_features))
+
+    self.A = nn.Parameter(torch.nn.init.xavier_uniform_(torch.zeros((n, n, n))))
+    self.S = nn.Parameter(torch.nn.init.xavier_uniform_(torch.zeros((n, self.out_features//n, self.in_features//n))))
+
+    if kron_res == True:
+      self.A2 = nn.Parameter(torch.nn.init.xavier_uniform_(torch.zeros((n, n, n))))
+      self.S2 = nn.Parameter(torch.nn.init.xavier_uniform_(torch.zeros((n, self.out_features//n, self.in_features//n))))
+    
+    self.weight = torch.zeros((self.out_features, self.in_features))
+
+    fan_in, _ = init._calculate_fan_in_and_fan_out(self.weight)
+    bound = 1 / math.sqrt(fan_in)
+    init.uniform_(self.bias, -bound, bound)
+
+  def kronecker_product2(self):
+    H = torch.zeros((self.out_features, self.in_features))
+    for i in range(self.n):
+      if self.kron_res == False:
+        H = H + self.kron_weights[i] * torch.kron(self.A[i], self.S[i])
+      elif self.kron_res == True:
+        H = H + self.kron_weights[i] * torch.kron(self.A[i], self.S[i]) + torch.kron(self.A2[i], self.S2[i])
+      elif self.kron_res == None:
+        H = H + torch.kron(self.A[i], self.S[i])
+    return H
+
+  def forward(self, input):
+    #self.weight = torch.sum(self.kronecker_product1(self.A, self.S), dim=0)
+    self.weight = self.kronecker_product2()
+    input = input.type(dtype=self.weight.type())
+    return F.linear(input, weight=self.weight, bias=self.bias)
+
+  def extra_repr(self) -> str:
+    return 'in_features={}, out_features={}, bias={}'.format(
+      self.in_features, self.out_features, self.bias is not None)
+    
+  def reset_parameters(self) -> None:
+    init.kaiming_uniform_(self.A, a=math.sqrt(5))
+    init.kaiming_uniform_(self.S, a=math.sqrt(5))
+    fan_in, _ = init._calculate_fan_in_and_fan_out(self.placeholder)
+    bound = 1 / math.sqrt(fan_in)
+    init.uniform_(self.bias, -bound, bound)
+
+class WPHConv(Module):
+  def __init__(self, n, in_features, out_features, kernel_size, padding=0, stride=1, 
+               kron_weights=1, kron_res=False, cuda=True):
+    super(WPHConv, self).__init__()
+    self.n = n
+    self.in_features = in_features
+    self.out_features = out_features
+    self.padding = padding
+    self.stride = stride
+    self.cuda = cuda
+
+    if kron_weights == 1:
+      self.kron_weights = nn.Parameter(torch.ones(n), requires_grad = True)
+    elif kron_weights == 0:
+      self.kron_weights = nn.Parameter(torch.zeros(n), requires_grad = True)
+    self.kron_res = kron_res
+
+    self.bias = nn.Parameter(torch.Tensor(out_features))
+    self.A = nn.Parameter(torch.nn.init.xavier_uniform_(torch.zeros((n, n, n))))
+    self.F = nn.Parameter(torch.nn.init.xavier_uniform_(
+        torch.zeros((n, self.out_features//n, self.in_features//n, kernel_size, kernel_size))))
+    
+    if kron_res == True:
+      self.A2 = nn.Parameter(torch.nn.init.xavier_uniform_(torch.zeros((n, n, n))))
+      self.F2 = nn.Parameter(torch.nn.init.xavier_uniform_(
+          torch.zeros((n, self.out_features//n, self.in_features//n, kernel_size, kernel_size))))
+    
+    self.weight = torch.zeros((self.out_features, self.in_features))
+    self.kernel_size = kernel_size
+
+    fan_in, _ = init._calculate_fan_in_and_fan_out(self.weight)
+    bound = 1 / math.sqrt(fan_in)
+    init.uniform_(self.bias, -bound, bound)
+
+  def kronecker_product2(self):
+    H = torch.zeros((self.out_features, self.in_features, self.kernel_size, self.kernel_size))
+    
+    if self.cuda:
+        H = H.cuda()
+    
+    for i in range(self.n):
+        kron_prod = torch.kron(self.A[i], self.F[i]).view(self.out_features, self.in_features, self.kernel_size, self.kernel_size)
+        if self.kron_res == False:
+          H = H + self.kron_weights[i] * kron_prod
+        elif self.kron_res == True:
+          kron_prod2 = torch.kron(self.A2[i], self.F2[i]).view(self.out_features, self.in_features, self.kernel_size, self.kernel_size)
+          H = H + self.kron_weights[i] * kron_prod + kron_prod2
+        elif self.kron_res == None:
+          H = H + kron_prod
+    
+    return H
+
+  def forward(self, input):
+    #self.weight = torch.sum(self.kronecker_product1(self.A, self.F), dim=0)
+    self.weight = self.kronecker_product2()
+    if self.cuda:
+        self.weight = self.weight.cuda()
+
+    input = input.type(dtype=self.weight.type())
+        
+    return F.conv2d(input, weight=self.weight, stride=self.stride, padding=self.padding)
+
+  def extra_repr(self) -> str:
+    return 'in_features={}, out_features={}, bias={}'.format(
+      self.in_features, self.out_features, self.bias is not None)
+    
+  def reset_parameters(self) -> None:
+    init.kaiming_uniform_(self.A, a=math.sqrt(5))
+    init.kaiming_uniform_(self.F, a=math.sqrt(5))
+    fan_in, _ = init._calculate_fan_in_and_fan_out(self.placeholder)
+    bound = 1 / math.sqrt(fan_in)
+    init.uniform_(self.bias, -bound, bound)
+
+#############################
+
 class KroneckerConv(Module):
     r"""Applies a Quaternion Convolution to the incoming data.
     """

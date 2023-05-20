@@ -2,7 +2,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.ph_layers.hypercomplex_layers import PHConv, PHMLinear
+
+from models.ph_layers.hypercomplex_layers import PHConv
 
 class FixupBasicBlock(nn.Module):
     expansion = 1
@@ -186,20 +187,20 @@ class FixupResNetLarge(nn.Module):
         out = self.linear(out + self.bias2)
         return out
 
-def fixup_resnet18(channels=4, n=4, num_classes=10):
+def PHCResNet18(channels=4, n=4, num_classes=10):
     return FixupResNet(FixupBasicBlock, [2, 2, 2, 2], channels=channels, n=n, num_classes=num_classes)
 
-def fixup_resnet18large(channels=4, n=4, num_classes=10):
+def PHCResNet18Large(channels=4, n=4, num_classes=10):
     return FixupResNetLarge(FixupBasicBlock, [2, 2, 2, 2], channels=channels, n=n, num_classes=num_classes)
 
-def fixup_resnet50(channels=4, n=4, num_classes=10):
+def PHCResNet50(channels=4, n=4, num_classes=10):
     return FixupResNet(FixupBottleneck, [3, 4, 6, 3], channels=channels, n=n, num_classes=num_classes)
 
-def fixup_resnet50large(channels=4, n=4, num_classes=10):
+def PHCResNet50Large(channels=4, n=4, num_classes=10):
     return FixupResNetLarge(FixupBottleneck, [3, 4, 6, 3], channels=channels, n=n, num_classes=num_classes)
 
-def fixup_resnet152(channels=4, n=4, num_classes=10):
+def PHCResNet152(channels=4, n=4, num_classes=10):
     return FixupResNet(FixupBottleneck, [3, 8, 36, 3], channels=channels, n=n, num_classes=num_classes)
 
-def fixup_resnet152large(channels=4, n=4, num_classes=10):
+def PHCResNet152Large(channels=4, n=4, num_classes=10):
     return FixupResNetLarge(FixupBottleneck, [3, 8, 36, 3], channels=channels, n=n, num_classes=num_classes)

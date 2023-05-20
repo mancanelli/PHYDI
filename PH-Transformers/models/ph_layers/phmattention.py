@@ -11,7 +11,7 @@ from models.ph_layers.phmlinear import PHMLinear
 
 
 def phm_multi_head_attention_forward(
-        n, A, S, query, key, value, embed_dim_to_check,
+        A, S, query, key, value, embed_dim_to_check,
         num_heads, in_proj_weight, in_proj_bias,
         bias_k, bias_v, add_zero_attn, dropout_p,
         out_proj_weight, out_proj_bias, training=True,
@@ -221,11 +221,11 @@ def phm_multi_head_attention_forward(
     attn_output = attn_output.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
 
     def kronecker_product1(a, b):
-      siz1 = torch.Size(torch.tensor(a.shape[-2:]) * torch.tensor(b.shape[-2:]))
-      res = a.unsqueeze(-1).unsqueeze(-3) * b.unsqueeze(-2).unsqueeze(-4)
-      siz0 = res.shape[:-4]
-      out = res.reshape(siz0 + siz1)
-      return out
+        siz1 = torch.Size(torch.tensor(a.shape[-2:]) * torch.tensor(b.shape[-2:]))
+        res = a.unsqueeze(-1).unsqueeze(-3) * b.unsqueeze(-2).unsqueeze(-4)
+        siz0 = res.shape[:-4]
+        out = res.reshape(siz0 + siz1)
+        return out
 
     out_proj_weight2 = torch.sum(kronecker_product1(A, S), dim=0)
 
@@ -331,7 +331,7 @@ class PHMMultiheadAttention(nn.Module):
 
         if not self._qkv_same_embed_dim:
             attn_output, attn_output_weights = phm_multi_head_attention_forward(
-                self.n, self.out_proj.A, self.out_proj.S, 
+                self.out_proj.A, self.out_proj.S, 
                 query, key, value, self.embed_dim, self.num_heads,
                 self.in_proj_weight, self.in_proj_bias,
                 self.bias_k, self.bias_v, self.add_zero_attn,
@@ -343,7 +343,7 @@ class PHMMultiheadAttention(nn.Module):
                 v_proj_weight=self.v_proj_weight)
         else:
             attn_output, attn_output_weights = phm_multi_head_attention_forward(
-                self.n, self.out_proj.A, self.out_proj.S, 
+                self.out_proj.A, self.out_proj.S, 
                 query, key, value, self.embed_dim, self.num_heads,
                 self.in_proj_weight, self.in_proj_bias,
                 self.bias_k, self.bias_v, self.add_zero_attn,

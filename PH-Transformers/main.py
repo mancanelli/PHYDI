@@ -1,14 +1,12 @@
 import os
-import wandb
-
-import torch
 import argparse
+import wandb
+import torch
 
+from training import Trainer
 from utils.dataloaders import DatasetHandler1, DatasetHandler2
 from utils.readFile import readFile
-
 from models.ph_model.phmtransformer import EncTransformer, Transformer
-from training import Trainer
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -55,6 +53,7 @@ if __name__ == '__main__':
 
     device = torch.device("cuda" if torch.cuda.is_available() and opt.cuda else "cpu")
 
+
     if opt.task == 1:
         dh = DatasetHandler1(opt.max_tokens, opt.batch_size, opt.eval_batch_size, device)
         train_data, val_data = dh.getData()
@@ -82,9 +81,10 @@ if __name__ == '__main__':
         src_vocab_size = len(dh.modern_vocab)
         tgt_vocab_size = len(dh.original_vocab)
 
-        net = Transformer(n=opt.n, nhead=opt.nhead, num_encoder_layers=opt.num_encoder_layers, num_decoder_layers=opt.num_decoder_layers, 
-                            emb_size=opt.emb_size, src_vocab_size=src_vocab_size, tgt_vocab_size=tgt_vocab_size,
-                            dim_feedforward=opt.nhid, ln_vers=opt.ln_vers, rezero=opt.rezero)
+        net = Transformer(n=opt.n, nhead=opt.nhead, num_encoder_layers=opt.num_encoder_layers, 
+                          num_decoder_layers=opt.num_decoder_layers, emb_size=opt.emb_size, 
+                          src_vocab_size=src_vocab_size, tgt_vocab_size=tgt_vocab_size,
+                          dim_feedforward=opt.nhid, ln_vers=opt.ln_vers, rezero=opt.rezero)
         net.to(device)
 
         criterion = torch.nn.CrossEntropyLoss(ignore_index=dh.PAD_IDX)
@@ -95,11 +95,13 @@ if __name__ == '__main__':
     params = sum(p.numel() for p in net.parameters() if p.requires_grad)
     print('Number of parameters:', params)
 
+
     wandb.init(project="rezero-phtransformer", dir="./PH-Transformers/")
     config = wandb.config
     wandb.watch(net)
     wandb.config.update(opt)
     #wandb.config.update({"params": params})
+
 
     checkpoint_folder = './PH-Transformers/checkpoints/'
     if not os.path.isdir(checkpoint_folder):
@@ -110,7 +112,6 @@ if __name__ == '__main__':
                       device=device, checkpoint_folder=checkpoint_folder,
                       lr=opt.lr, momentum=opt.momentum, weight_decay=opt.weight_decay)
     
-    ''''''
     if opt.task == 1:
         trainer.train1(train_data, val_data, src_vocab_size)
     elif opt.task == 2:

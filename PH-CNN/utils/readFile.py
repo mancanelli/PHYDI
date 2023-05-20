@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Sun Dec 13 19:22:06 2020
 
@@ -6,7 +5,6 @@ Created on Sun Dec 13 19:22:06 2020
 """
 
 def readFile(path):
-    
     with open(path, 'r') as f:
         r = f.read()
         r = r.replace('=', '+').replace('\n', '+').split('+')

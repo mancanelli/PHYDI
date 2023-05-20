@@ -1,30 +1,20 @@
-import os
 import torch
 import numpy as np
-import pickle
-
 from torchvision import datasets, transforms
-import PIL
-from PIL import Image
-import matplotlib.pyplot as plt
-
-# from multiprocessing import cpu_count
-
 
 class Pad(object):
     def __init__(self):
         return
     
     def __call__(self, input):
-        
         return(torch.nn.functional.pad(input, pad= (0,0,0,0,1,0), mode= 'constant', value= 0))
     
     
 class Concat_GrayScale(object):
     def __init__(self):
         return
+    
     def __call__(self, input):
-
         # gray_scaled = transforms.Grayscale(input)
         # gray_scaled = transforms.ToPILImage()(input).convert('L')
         gray_scaled = np.asarray(input.convert('L'))
@@ -41,9 +31,8 @@ class Concat_GrayScale(object):
 def preprocessing(quat_data, img_size, normalize):
         ''' quat_data: if data is quaternionic
             img_size: data reshape size (squared)
-            normalize: if data has to be normalized in [0,1]
-            
-            '''
+            normalize: if data has to be normalized in [0,1]    
+        '''
         R = transforms.Resize(img_size)
         C = transforms.CenterCrop(img_size)
         T = transforms.ToTensor()
@@ -63,8 +52,6 @@ def preprocessing(quat_data, img_size, normalize):
         print('Preprocessing:\n',transforms.Compose(lista))
         return transforms.Compose(lista)
 
-
-
 #-----------------------------------------------------------------------------------------------------------#
 
 class ARRange(object):
@@ -77,14 +64,12 @@ class ARRange(object):
         
         # print(self.scale, self.bias)
     def __call__(self, input):
-
         return input * self.scale + self.bias
 
 
 class To_Tensor_custom(object):
     ''' Change values of the pixels of the images to match the output of the generator in [-1,1] '''
     def __init__(self):
-
         pass
         
     def __call__(self, pic):
@@ -106,7 +91,6 @@ class To_Tensor_custom(object):
         # put it from HWC to CHW format
         img = img.permute((2, 0, 1)).contiguous()
         
-        
         # print(input.shape)
         return img
 
@@ -116,8 +100,7 @@ def preprocessing2(quat_data, img_size, normalize):
         ''' quat_data: if data is quaternionic
             img_size: data reshape size (squared)
             normalize: if data has to be normalized
-            
-            '''
+        '''
         R = transforms.Resize(img_size)
         C = transforms.CenterCrop(img_size)
         # T = transforms.ToTensor()
@@ -136,7 +119,6 @@ def preprocessing2(quat_data, img_size, normalize):
         else:
             N = ARRange([0,1])
         lista.append(N)
-       
         
         return transforms.Compose(lista)    
     
@@ -149,7 +131,7 @@ def add_dim(img):
 def preprocessing_HQ(quat_data, img_size):
         ''' quat_data: if data is quaternionic
             img_size: data reshape size (squared)
-            '''
+        '''
         lista = []
         T = To_Tensor_custom()
         lista.append(T)
@@ -165,7 +147,7 @@ def preprocessing_HQ(quat_data, img_size):
 def preprocessing_cifar(quat_data, img_size, train=True):
         ''' quat_data: if data is quaternionic
             img_size: data reshape size (squared)
-            '''
+        '''
         lista = []
 #         C = transforms.RandomCrop(32, padding=4, padding_mode="reflect")
 #         H_flip = transforms.RandomHorizontalFlip()
@@ -189,7 +171,7 @@ def preprocessing_cifar(quat_data, img_size, train=True):
 def preprocessing_cifar100(quat_data, img_size, train=True):
         ''' quat_data: if data is quaternionic
             img_size: data reshape size (squared)
-            '''
+        '''
         lista = []
         # C = transforms.RandomCrop(32, padding=4, padding_mode="reflect")
         # H_flip = transforms.RandomHorizontalFlip()
@@ -213,7 +195,7 @@ def preprocessing_cifar100(quat_data, img_size, train=True):
 def preprocessing_cifar_gray(quat_data, img_size, train=True):
         ''' quat_data: if data is quaternionic
             img_size: data reshape size (squared)
-            '''
+        '''
         lista = []
         C = transforms.RandomCrop(32, padding=4, padding_mode="reflect")
         H_flip = transforms.RandomHorizontalFlip()
@@ -231,7 +213,6 @@ def preprocessing_cifar_gray(quat_data, img_size, train=True):
             lista.append(G)
             N = transforms.Normalize((0.5, 0.4914, 0.4822, 0.4465), (0.5, 0.2023, 0.1994, 0.2010))
 
-
         lista.append(T)
         lista.append(N)
         # lista.append(N_01)
@@ -244,7 +225,6 @@ def preprocessing_cifar_gray(quat_data, img_size, train=True):
 
 # torchvision.datasets.CIFAR10(root: str, train: bool = True, transform: Union[Callable, NoneType] = None, target_transform: Union[Callable, NoneType] = None, download: bool = False) → None
 
-
 def CIFAR10_dataloader(root, quat_data, img_size, batch_size, num_workers=1, eval=False, eval_percentage=0.2):
     """CIFAR10 dataloader with resized and normalized images."""
     
@@ -256,8 +236,6 @@ def CIFAR10_dataloader(root, quat_data, img_size, batch_size, num_workers=1, eva
     
     # dataset = datasets.LSUN(root= root, classes=['bedroom_train'],
     #         transform = preprocessing2(quat_data, img_size, normalize))
-
-    
 
     print('Samples:', dataset.__len__())
     print()
@@ -338,7 +316,6 @@ def CIFAR100_dataloader(root, quat_data, img_size, batch_size, num_workers=1, ev
     return train_loader, test_loader, eval_loader, name  
 
 def SVHN_dataloader(root, quat_data, img_size, batch_size, num_workers=1, eval=False, eval_percentage=0.2):
-
     name = 'SVHN'
     print('Dataset:', name)
 
@@ -368,7 +345,6 @@ def SVHN_dataloader(root, quat_data, img_size, batch_size, num_workers=1, eval=F
     return train_loader, test_loader, eval_loader, name   
 
 def STL10_dataloader(root, quat_data, img_size, batch_size, num_workers=1, eval=False, eval_percentage=0.2):
-
     name = 'STL10'
     print('Dataset:', name)
 

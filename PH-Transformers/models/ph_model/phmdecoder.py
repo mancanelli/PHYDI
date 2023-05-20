@@ -43,10 +43,11 @@ class DecoderLayer(nn.Module):
     def forward(self, tgt, memory, tgt_mask=None, memory_mask=None,
                 tgt_key_padding_mask=None, memory_key_padding_mask=None):
         # attention
+        tgt2 = tgt
         if self.ln_vers == "pre":
-            tgt = self.ln1(tgt)
+            tgt2 = self.ln1(tgt2)
 
-        tgt2 = self.self_attn(tgt, tgt, tgt, attn_mask=tgt_mask,
+        tgt2 = self.self_attn(tgt2, tgt2, tgt2, attn_mask=tgt_mask,
                               key_padding_mask=tgt_key_padding_mask)[0]
         tgt2 = self.dropout1(tgt2)
 
@@ -61,10 +62,11 @@ class DecoderLayer(nn.Module):
             tgt = self.ln1(tgt)
         
         # attention
+        tgt2 = tgt
         if self.ln_vers == "pre":
-            tgt = self.ln2(tgt)
+            tgt2 = self.ln2(tgt2)
         
-        tgt2 = self.multihead_attn(tgt, memory, memory, attn_mask=memory_mask,
+        tgt2 = self.multihead_attn(tgt2, memory, memory, attn_mask=memory_mask,
                                    key_padding_mask=memory_key_padding_mask)[0]
         tgt2 = self.dropout2(tgt2)
 
@@ -79,10 +81,11 @@ class DecoderLayer(nn.Module):
             tgt = self.ln2(tgt)
         
         # feedforward
+        tgt2 = tgt
         if self.ln_vers == "pre":
-            tgt = self.ln3(tgt)
+            tgt2 = self.ln3(tgt2)
         
-        tgt2 = self.activation(self.linear1(tgt))
+        tgt2 = self.activation(self.linear1(tgt2))
         tgt2 = self.dropout(tgt2)
         tgt2 = self.linear2(tgt2)
         tgt2 = self.dropout3(tgt2)

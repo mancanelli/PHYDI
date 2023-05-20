@@ -88,7 +88,7 @@ class DatasetHandler2():
             for string_ in f:
                 counter.update(self.en_tokenizer(string_))
         
-        #max_tokens = 10101 #12928
+        #max_tokens = 12928
         specials=['<unk>', '<pad>', '<bos>', '<eos>']
         
         sorted_by_freq_tuples = sorted(counter.items(), key=lambda x: (-x[1], x[0]))
