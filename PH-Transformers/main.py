@@ -53,45 +53,20 @@ if __name__ == '__main__':
 
     device = torch.device("cuda" if torch.cuda.is_available() and opt.cuda else "cpu")
 
+    dh = DatasetHandler1(opt.max_tokens, opt.batch_size, opt.eval_batch_size, device)
+    train_data, val_data = dh.getData()
 
-    if opt.task == 1:
-        dh = DatasetHandler1(opt.max_tokens, opt.batch_size, opt.eval_batch_size, device)
-        train_data, val_data = dh.getData()
+    src_vocab_size = len(dh.vocab)
 
-        src_vocab_size = len(dh.vocab)
-
-        net = EncTransformer(n=opt.n, src_vocab_size=src_vocab_size, emb_size=opt.emb_size, nhead=opt.nhead, 
-                            dim_feedforward=opt.nhid, num_encoder_layers=opt.num_encoder_layers, dropout=opt.dropout, 
-                            ln_vers=opt.ln_vers, rezero=opt.rezero)
-        net.to(device)
-        
-        criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adagrad(net.parameters(), lr=opt.lr)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.9)
-        
-    elif opt.task == 2:
-        dataset_path = './PH-Transformers/datasets/'
-
-        train_filepaths = [dataset_path + 'shakespeare.train/train.modern', dataset_path + 'shakespeare.train/train.original']
-        val_filepaths = [dataset_path + 'shakespeare.dev/dev.modern', dataset_path + 'shakespeare.dev/dev.original']
-
-        dh = DatasetHandler2(train_filepaths, val_filepaths, opt.max_tokens, opt.batch_size)
-        train_data, val_data = dh.getData()
-
-        src_vocab_size = len(dh.modern_vocab)
-        tgt_vocab_size = len(dh.original_vocab)
-
-        net = Transformer(n=opt.n, nhead=opt.nhead, num_encoder_layers=opt.num_encoder_layers, 
-                          num_decoder_layers=opt.num_decoder_layers, emb_size=opt.emb_size, 
-                          src_vocab_size=src_vocab_size, tgt_vocab_size=tgt_vocab_size,
-                          dim_feedforward=opt.nhid, ln_vers=opt.ln_vers, rezero=opt.rezero)
-        net.to(device)
-
-        criterion = torch.nn.CrossEntropyLoss(ignore_index=dh.PAD_IDX)
-        optimizer = torch.optim.AdamW(net.parameters(), lr=0.0001, betas=(0.9, 0.98), eps=1e-9, weight_decay=0.05)
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[10, 20, 30], gamma=0.9)
-
-
+    net = EncTransformer(n=opt.n, src_vocab_size=src_vocab_size, emb_size=opt.emb_size, nhead=opt.nhead, 
+                        dim_feedforward=opt.nhid, num_encoder_layers=opt.num_encoder_layers, dropout=opt.dropout, 
+                        ln_vers=opt.ln_vers, rezero=opt.rezero)
+    net.to(device)
+    
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adagrad(net.parameters(), lr=opt.lr)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.9)
+    
     params = sum(p.numel() for p in net.parameters() if p.requires_grad)
     print('Number of parameters:', params)
 
@@ -112,8 +87,4 @@ if __name__ == '__main__':
                       device=device, checkpoint_folder=checkpoint_folder,
                       lr=opt.lr, momentum=opt.momentum, weight_decay=opt.weight_decay)
     
-    if opt.task == 1:
-        trainer.train1(train_data, val_data, src_vocab_size)
-    elif opt.task == 2:
-        trainer.train2(train_data, val_data, dh.PAD_IDX)
-    
+    trainer.train1(train_data, val_data, src_vocab_size)
