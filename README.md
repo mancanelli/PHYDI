@@ -1,4 +1,4 @@
-# ReZero-PHNN
+# PHYDI: Initializing Parameterized Hypercomplex Neural Networks as Identity Functions
 
 work in progress...
 
