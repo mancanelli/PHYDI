@@ -10,7 +10,20 @@ Neural models based on hypercomplex algebra systems are growing and prolificatin
 
 ### How to use ...
 
-### References 
+
+#### Cite
+Please, cite our work if you found it useful.
+
+```
+@inproceedings{mancanelli2023MLSP,
+    title={PHYDI: Initializing Parameterized Hypercomplex Neural Networks as Identity Functions},
+    author={Mancanelli, Matteo and Grassucci, Eleonora and Barbarossa, Sergio and Comminiello, Danilo},
+    year={2023},
+    booktitle={IEEE Workshop on Machine Learning for Signal Processing (MLSP)},
+}
+```
+
+#### References 
 
 The code is borrowed and adapted from the following github repo:
 1. [HyperNets](https://github.com/eleGAN23/HyperNets)
