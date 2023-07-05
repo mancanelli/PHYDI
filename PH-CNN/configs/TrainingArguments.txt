@@ -1,0 +1,13 @@
+--train_dir=./PH-CNN/datasets/CIFAR10
+--dataset=CIFAR10
+--cuda=True
+--optim=SGD
+--scheduler=MultiStepLR
+--seed=84077
+--model=phcresnet18
+--rezero=True
+--quat_data=True
+--n=4
+--batch_size=64
+--lr=0.01
+--epochs=100

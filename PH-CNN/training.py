@@ -8,7 +8,7 @@ import torch.nn as nn
 from models.ph_layers.hypercomplex_layers import PHConv
 
 class Trainer():
-    def __init__(self, net, optimizer, scheduler, epochs, 
+    def __init__(self, net, optimizer, scheduler, epochs, threshold,
                  use_cuda=True, gpu_num=0, checkpoint_folder="./checkpoints", 
                  get_iter_time=False, get_inf_time=False, optim_name="SGD", lr=0.1, 
                  momentum=0.9, weight_decay=5e-4, eval_percentage=0.20, l1_reg=False):
@@ -16,6 +16,7 @@ class Trainer():
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.epochs = epochs
+        self.threshold = threshold
         self.use_cuda = use_cuda
         self.gpu_num = gpu_num
         self.criterion = nn.CrossEntropyLoss()
@@ -113,7 +114,7 @@ class Trainer():
             wandb.log({"val loss": running_loss_eval/j})
             wandb.log({"val acc": acc})
             
-            if acc >= 80:
+            if acc >= self.threshold:
                 break
             
             running_loss_train = 0.0

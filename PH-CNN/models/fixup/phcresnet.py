@@ -103,15 +103,15 @@ class FixupResNet(nn.Module):
         self.bias2 = nn.Parameter(torch.zeros(1))
         self.linear = nn.Linear(512 * block.expansion, num_classes)
 
-        nn.init.normal_(self.conv1.F, mean=0, std=np.sqrt(2 / (self.conv1.F.shape[0] * np.prod(self.conv1.F.shape[2:]))) * self.num_layers ** (-0.25))
+        nn.init.normal_(self.conv1.F, mean=0, std=np.sqrt(2 / (self.conv1.F.shape[0] * np.prod(self.conv1.F.shape[2:]))) * self.num_layers ** (-0.16))
 
         for m in self.modules():
             if isinstance(m, FixupBasicBlock):
                 nn.init.normal_(m.conv1.F, mean=0, std=np.sqrt(2 / (m.conv1.F.shape[0] * np.prod(m.conv1.F.shape[2:]))) * self.num_layers ** (-0.25))
                 nn.init.constant_(m.conv2.F, 0)
             elif isinstance(m, FixupBottleneck):
-                nn.init.normal_(m.conv1.F, mean=0, std=np.sqrt(2 / (m.conv1.F.shape[0] * np.prod(m.conv1.F.shape[2:]))) * self.num_layers ** (-0.25))
-                nn.init.normal_(m.conv2.F, mean=0, std=np.sqrt(2 / (m.conv2.F.shape[0] * np.prod(m.conv2.F.shape[2:]))) * self.num_layers ** (-0.25))
+                nn.init.normal_(m.conv1.F, mean=0, std=np.sqrt(2 / (m.conv1.F.shape[0] * np.prod(m.conv1.F.shape[2:]))) * self.num_layers ** (-0.16))
+                nn.init.normal_(m.conv2.F, mean=0, std=np.sqrt(2 / (m.conv2.F.shape[0] * np.prod(m.conv2.F.shape[2:]))) * self.num_layers ** (-0.16))
                 nn.init.constant_(m.conv3.F, 0)
             elif isinstance(m, nn.Linear):
                 nn.init.constant_(m.weight, 0)

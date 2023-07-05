@@ -5,12 +5,13 @@ import wandb
 
 class Trainer():
     def __init__(self, net, optimizer, scheduler, criterion, epochs, 
-                    device=True, checkpoint_folder="./checkpoints",
-                    lr=0.1, momentum=0.9, weight_decay=5e-4):
+                 threshold, device=True, checkpoint_folder="./checkpoints",
+                 lr=0.1, momentum=0.9, weight_decay=5e-4):
 
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.epochs = epochs
+        self.threshold = threshold
         self.device = device
         self.criterion = criterion
         self.checkpoints_folder = checkpoint_folder
@@ -71,5 +72,5 @@ class Trainer():
             wandb.log({"val loss": val_loss})
             wandb.log({"val ppl": val_ppl})
 
-            if val_ppl <= 200:
+            if val_ppl <= self.threshold:
                 break
